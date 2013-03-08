@@ -107,11 +107,13 @@ static int variable()
         exit(EXIT_FAILURE);
     }
     reg = next_register();
+    CodeGen(LOAD, reg, token, EMPTY_FIELD);
     /* YOUR CODE GOES HERE */
     next_token();
     return reg;
 }
 
+/*returns register #*/
 static int expr()
 {
     int reg, left_reg, right_reg;
@@ -165,48 +167,40 @@ static int expr()
     }
 }
 
+/*called by stmt*/
+/*token should be identifier*/
 static void assign()
 {
-    int reg, val;
+    int reg;
     char id;
 
-    reg = next_register();
-    id = variable();
+    id = token;
     next_token();
     if(token != '='){
-        ERROR("Expected '=' but got %c instead\n", token);
+        ERROR("Expected '='\n");
         exit(EXIT_FAILURE);
     }
     next_token();
-    CodeGen(LOADI, reg, val, EMPTY_FIELD);
-    CodeGen(STORE, id, val, EMPTY_FIELD);
-
+    reg = expr();
+    CodeGen(STORE, id, reg, EMPTY_FIELD);
 }
 
 static void read()
 {
-    char id;
+    next_token();
+    CodeGen(READ, token, EMPTY_FIELD, EMPTY_FIELD);
+    next_token();
+}
 
+static void print()
+{
     next_token();
     if(!is_identifier(token)){
         ERROR("Expected identifier\n");
         exit(EXIT_FAILURE);
     }
-    id = token;
-    CodeGen(READ, id, EMPTY_FIELD, EMPTY_FIELD);
-}
-
-static void print()
-{
-    char id;
-
-    id = variable();
-    if(!is_identifier(token)){
-        ERROR("Expected identifier\n");
-        exit(EXIT_FAILURE);
-    }
-    CodeGen(STORE, id, EMPTY_FIELD, EMPTY_FIELD);
-    CodeGen(READ, id, EMPTY_FIELD, EMPTY_FIELD);
+    CodeGen(WRITE, token, EMPTY_FIELD, EMPTY_FIELD);
+    next_token();
 }
 
 static void stmt()
@@ -232,46 +226,20 @@ static void stmt()
             ERROR("Symbol %c unknown\n", token);
             exit(EXIT_FAILURE);
     }
-/*    next_token()??*/
 }
 
 static void morestmts()
 {
-    switch(token){
-        case ';':
-            next_token();
-            stmtlist();
-            return;
-
-        case '.':
-            return;
-
-        default:
-            ERROR("Symbol %c unknown\n", token);
-            exit(EXIT_FAILURE);
+    if(token == ';'){
+        next_token();
+        stmtlist();
     }
 }
 
 static void stmtlist()
 {
-    switch(token){
-        case 'a':
-        case 'b':
-        case 'c':
-        case 'd':
-        case 'e':
-        case '?':
-        case '!':
-            stmt();
-
-        case ';':
-            next_token();
-            morestmts();
-
-        default:
-            ERROR("Symbol %c unknown\n", token);
-            exit(EXIT_FAILURE);
-    }
+    stmt();
+    morestmts();
 }
 
 static void program()

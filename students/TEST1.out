@@ -1,0 +1,12 @@
+READ a
+LOAD r1 a
+LOADI r2 #4
+MUL r3 r1 r2
+STORE b r3
+LOADI r4 #3
+LOAD r5 a
+LOADI r6 #2
+ADD r7 r5 r6
+MUL r8 r4 r7
+STORE a r8
+WRITE a
