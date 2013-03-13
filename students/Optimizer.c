@@ -15,19 +15,61 @@
 
 int main()
 {
-	Instruction *head;
-	Instruction *instr1, *instr2, *instr3;
-	int opt_flag, opt_calc;
+    Instruction *head;
+    Instruction *curr, *prev, *next;
 
-	head = ReadInstructionList(stdin);
-	if (!head) {
-		ERROR("No instructions\n");
-		exit(EXIT_FAILURE);
-	}
+    head = ReadInstructionList(stdin);
+    if (!head) {
+        ERROR("No instructions\n");
+        exit(EXIT_FAILURE);
+    }
 
-	/* YOUR CODE GOES HERE */
+    curr = head;
+    prev = head->prev;
+    next = head->next;
 
-	PrintInstructionList(stdout, head);
-	DestroyInstructionList(head);
-	return EXIT_SUCCESS;
+    while(curr && next){
+        if(prev && prev->opcode == LOADI &&
+                curr && curr->opcode == LOADI){
+            switch(next->opcode){
+                /*add*/
+                case ADD:
+                    curr->field1 = next->field1;
+                    curr->field2 = prev->field2 + curr->field2;
+
+                    /*sub*/
+                case SUB:
+                    curr->field1 = next->field1;
+                    if(next->field2 > next->field3){
+                        curr->field2 = curr->field2 - prev->field2;
+                    }
+                    else{
+                        curr->field2 = curr->field2 - prev->field2; 
+                    }
+
+                    /*mul*/
+                case MUL:
+                    curr->field1 = next->field1;
+                    curr->field2 = curr->field2 * prev->field2;
+
+                    curr->next = next->next;
+                    curr->next->prev = curr;
+                    curr->prev = prev->prev;
+                    curr->prev->next = curr;
+                    free(prev);
+                    free(next);
+
+                default:
+                    break;
+            }
+        }
+        curr = curr->next;
+        prev = curr->prev;
+        next = curr->next;
+
+
+    }
+    PrintInstructionList(stdout, head);
+    DestroyInstructionList(head);
+    return EXIT_SUCCESS;
 }
